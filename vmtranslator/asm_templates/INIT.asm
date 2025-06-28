@@ -1,0 +1,66 @@
+// SP=256
+@256
+D=A
+@SP
+M=D
+// push INIT_ENDLESS_LOOP
+@INIT_ENDLESS_LOOP
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// push LCL
+@LCL
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// push ARG
+@ARG
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// push THIS
+@THIS
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// push THAT
+@THAT
+D=M
+@SP
+A=M
+M=D
+@SP
+MD=M+1
+// LCL=SP
+@LCL
+M=D
+// ARG=SP-5
+@5
+D=A
+@SP
+D=M-D
+@ARG
+M=D
+// LCL=SP
+@SP
+D=M
+@LCL
+M=D
+// goto Sys.init
+@Sys.init
+0;JMP
+(INIT_ENDLESS_LOOP)
+@INIT_ENDLESS_LOOP
+0;JMP
