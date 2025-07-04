@@ -1,0 +1,54 @@
+%YAML 1.2
+---
+name: Jack
+file_extensions:
+  - jack
+scope: source.jack
+
+contexts:
+  main:
+    - include: comments
+    - include: strings
+    - include: keywords
+    - include: symbols
+    - include: numbers
+    - include: identifiers
+
+  comments:
+    - match: '//.*$'
+      scope: comment.line.double-slash.jack
+    - match: '/\*'
+      scope: comment.block.jack
+      push:
+        - meta_scope: comment.block.jack
+        - match: '\*/'
+          pop: true
+
+  strings:
+    - match: '"'
+      scope: punctuation.definition.string.begin.jack
+      push:
+        - meta_scope: string.quoted.double.jack
+        - match: '"'
+          scope: punctuation.definition.string.end.jack
+          pop: true
+        - match: '\\.'
+          scope: constant.character.escape.jack
+        - match: '[^"\\]+'
+          scope: string.quoted.double.jack
+
+  keywords:
+    - match: \b(class|constructor|function|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do|if|else|while|return)\b
+      scope: keyword.control.jack
+
+  symbols:
+    - match: '[{}()\[\].,;+\-*/&|<>=~]'
+      scope: punctuation.symbol.jack
+
+  numbers:
+    - match: \b\d+\b
+      scope: constant.numeric.integer.jack
+
+  identifiers:
+    - match: \b[A-Za-z_][A-Za-z0-9_]*\b
+      scope: variable.other.jack

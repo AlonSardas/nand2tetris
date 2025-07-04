@@ -1,0 +1,166 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+/**
+ *  A library of commonly used mathematical functions.
+ *  All functions runs in O(n), where n is the number of bits used
+ *  for representing a two's complement integer value (16 in the Hack computer). 
+ *  Note: Jack compilers implement multiplication and division
+ *  using calls to OS functions in this class.
+ */
+class Math {
+
+    static int n;             // Number of bits used for representing a two's complement integer
+    static int minusOne;
+    static Array powersOfTwo; // Stores 2^0, 2^1, 2^2,..., 2^(n-1)
+
+    // Initializes the Math library.
+    function void init() {
+        let n = 16;
+
+        let minusOne = -1;
+
+        let powersOfTwo = Array.new(16);
+        let powersOfTwo[0] = 1;
+        let powersOfTwo[1] = 2;
+        let powersOfTwo[2] = 4;
+        let powersOfTwo[3] = 8;
+        let powersOfTwo[4] = 16;
+        let powersOfTwo[5] = 32;
+        let powersOfTwo[6] = 64;
+        let powersOfTwo[7] = 128;
+        let powersOfTwo[8] = 256;
+        let powersOfTwo[9] = 512;
+        let powersOfTwo[10] = 1024;
+        let powersOfTwo[11] = 2048;
+        let powersOfTwo[12] = 4096;
+        let powersOfTwo[13] = 8192;
+        let powersOfTwo[14] = 16384;
+        let powersOfTwo[15] = 16384+16384;
+
+        return;
+    }
+
+    function Array getPowersOfTwoArray() {
+        return powersOfTwo;
+    }
+
+    /** Returns the absolute value of x. */
+    function int abs(int x) {
+        if (x < 0) {
+            return -x;
+        }
+        return x;
+    }
+
+    /** Returns the product of x and y. 
+     *  When a Jack compiler detects the multiplication operator '*'
+     *  in an expression, it handles it by invoking this method. 
+     *  Thus, in Jack, x * y and Math.multiply(x,y) return the same value. */
+    function int multiply(int x, int y) {
+        var int ans;
+        var int bit;
+
+        let bit = 1;
+        while (~(bit = 0)) {
+            if ((y | bit) = y) {
+                let ans = ans + x;
+            }
+            let x = x + x;
+            let bit = bit + bit;
+        }
+        return ans;
+    }
+
+    /** Returns the integer part of x / y.
+     *  When a Jack compiler detects the division operator '/'
+     *  an an expression, it handles it by invoking this method.
+     *  Thus, x/y and Math.divide(x,y) return the same value. */
+    function int divide(int x, int y) {
+        var int y2;
+        var int q;
+        var int neg;
+        var int ans;
+
+        if (y = 0) {
+            do Sys.error(3);
+        }
+
+        if (x < 0) {
+            let neg = 16384;  // with this value, neg+neg == 0
+            let x = -x;
+        }
+        if (y < 0) {
+            let neg = neg + 16384;
+            let y = -y;
+        }
+
+        if (y > x) {
+            return 0;
+        }
+
+        let y2 = y+y;
+        if (y2 < 0) {
+            // Got overflow
+            let q = 0;
+        } else {
+            let q = Math.divide(x, y2);
+        }
+
+        if ((x-Math.multiply(q, y2)) < y) {
+            let ans = q + q;
+        } else {
+            let ans = q + q + 1;
+        }
+
+        if (neg=0) {
+            return ans;
+        }
+        return -ans;
+    }
+
+    /** Returns the smaller value. */
+    function int min(int x, int y) {
+        if (x < y) {
+            return x;
+        }
+        return y;
+    }
+
+    /** Returns the greater value. */
+    function int max(int x, int y) {
+        if (x > y) {
+            return x;
+        }
+        return y;
+    }
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x) {
+        var int y;
+        var int n;
+        var int n_div_2;
+        var int current;
+        var int temp;
+        var int tempSquare;
+
+        let current = 4;
+        let n_div_2 = 1;
+        while((current < x) & (current>0)) {
+            let current = current + current + current + current;
+            // let n = n + 2;
+            let n_div_2 = n_div_2 + 1;
+        }
+
+        while(n_div_2 > minusOne) {
+            let temp = y + powersOfTwo[n_div_2];
+            let tempSquare = Math.multiply(temp, temp);
+            if ((tempSquare > 0) & ((tempSquare - 1) < x)) {
+                let y = temp;
+            }
+            let n_div_2 = n_div_2 - 1;
+        }
+
+        return y;
+    }
+}

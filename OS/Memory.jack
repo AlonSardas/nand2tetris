@@ -1,0 +1,152 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+
+	/*
+	For each deallocated memory block at addr,
+	heap[addr-1] is the size of the block
+	heap[addr-2] points to the next free block
+	*/
+
+	static Array ram;
+	static Array heap;
+	static int freeList;
+	static int heapSize;
+	static int heapEnd;
+
+    /** Initializes the class. */
+	function void init() {
+		let ram = 0;		
+		let heap = 2048;
+		let freeList = heap;
+		let heap[0] = 0;
+		let heapSize = 14335;
+		let heapEnd = 16383;  // = heap + heapSize
+		let heap[1] = 14333;  // = heapSize - 2
+		return;
+	}
+
+    /** Returns the RAM value at the given address. */
+	function int peek(int address) {
+		return ram[address];
+	}
+
+    /** Sets the RAM value at the given address to the given value. */
+	function void poke(int address, int value) {
+		let ram[address] = value;
+		return;
+	}
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+	function Array alloc(int size) {
+		var int blockSize;
+		var int freeBlock;
+		var int address;
+		var int updatedFreeBlockSize;
+
+		if (size > 0) {
+		} else {
+			do Sys.error(5);
+		}
+
+		let blockSize = size + 2;
+		let freeBlock = freeList;
+
+		while (freeBlock[1] < blockSize) {
+			// Not enough free space, advance to the next block
+			if (freeBlock[0] = 0) {
+				// If no more blocks
+				do Sys.error(6);
+			}
+
+			let freeBlock = freeBlock[0];
+		}
+
+
+		// Resize the free block from the end
+		// Final size might be 0
+		let updatedFreeBlockSize = freeBlock[1] - blockSize;
+		let freeBlock[1] = updatedFreeBlockSize;
+		let address = freeBlock + updatedFreeBlockSize + 4;  // 2 from freeBlock and 2 for headers for this block
+		let address[-1] = size;
+		return address;
+	}
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+	function void deAlloc(Array o) {
+		/*
+		Update the freeList, while maintaining its order
+		*/
+
+		var int updatedSize, currentBlock, nextBlock, defrag;
+
+		let o = o - 2;  // Set for the beginning of the block
+
+		// If o should be at the beginning
+		if (o < freeList) {
+			let defrag = tryDefragmentize(o, freeList);
+			if (defrag = 1) {
+				let freeList = o;
+			} else {
+				let o[0] = freeList;
+				let freeList = o;
+			}
+			return;
+		}
+
+		// Find the correct place to put o
+		let currentBlock = freeList;
+		let nextBlock = currentBlock[0];
+		while ((nextBlock > 0) & (nextBlock < o)) {
+			let currentBlock = nextBlock;
+			let nextBlock = currentBlock[0];
+		}
+
+		// Enter block in-between and defragmentize if possible
+		let currentBlock[0] = o;
+		let o[0] = nextBlock;
+		if (nextBlock > 0) {
+			do Memory.tryDefragmentize(o, nextBlock);
+		}
+		do Memory.tryDefragmentize(currentBlock, o);
+		return;
+	}
+
+	function int tryDefragmentize(int firstAddr, int secondAddr) {
+		/*
+		Try defragmentize 2 blocks, if they are contiguous
+		Return 1 if blocks are defragmented.
+		*/
+		var int updatedSize;
+
+		if ((firstAddr + 2 + firstAddr[1]) < secondAddr) {
+			// not contiguous
+			return 0;
+		}
+
+		let updatedSize = secondAddr[1] + firstAddr[1] + 2;
+		let firstAddr[0] = secondAddr[0];
+		let firstAddr[1] = updatedSize;
+		return 1;
+	}
+
+	/**
+	 * Checks that the entire heap is free to use. This is useful for diagnostics, to see that defragmentation works properly
+	 */
+	function boolean isFree() {
+		if (freeList = 2048) {
+			if (heap[1] = 14333) {
+				return true;
+			}
+		}
+		return false;
+	}
+}

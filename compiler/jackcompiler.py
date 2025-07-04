@@ -29,7 +29,14 @@ class JackCompiler:
     def __init__(self, input_stream: IO[str], output_stream: IO[str]):
         tokenizer = jacktokenizer.JackTokenizer(input_stream)
         parser = jackparser.JackParser(tokenizer)
-        self.class_ = parser.compile_class()
+
+        try:
+            self.class_ = parser.compile_class()
+        except errors.CompilationError:
+            print(f"Error while parsing line {tokenizer.get_current_line()}.")
+            print()
+            raise
+
         self.class_name = self.class_.class_name
         self._func_name = ""
         self.symbol_table = symboltable.SymbolTable()

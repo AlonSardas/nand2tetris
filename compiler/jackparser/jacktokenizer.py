@@ -2,15 +2,15 @@ from typing import IO
 
 from compiler.jackparser import languagerules, tokens
 from compiler.errors import ParserError
+from compiler.jackparser.linecounter import LineCounter
 from compiler.jackparser.tokens import Token
 
 
 class JackTokenizer:
     def __init__(self, input_stream: IO[str]):
-        self.input = input_stream
+        self.input = LineCounter(input_stream)
         self._current_token = None
-        self._line_number = 1
-        self._next_char = input_stream.read(1)
+        self._next_char = self.input.read_char()
         if self._next_char == "":
             raise ValueError("The given input stream is empty")
         self.advance()
@@ -22,7 +22,7 @@ class JackTokenizer:
         return self._current_token
 
     def get_current_line(self) -> int:
-        return self._line_number
+        return self.input.get_current_line()
 
     def advance(self):
         if self._next_char == "":
@@ -46,7 +46,7 @@ class JackTokenizer:
         self._exhaust_whitespaces()
 
         if self._next_char == "/":
-            next_next_char = self.input.read(1)
+            next_next_char = self.input.read_char()
             if next_next_char == "/":
                 self._exhaust_line_comment()
                 return False
@@ -63,7 +63,7 @@ class JackTokenizer:
 
         if self._next_char in languagerules.SYMBOLS:
             self._current_token = tokens.Symbol(self._next_char)
-            self._next_char = self.input.read(1)
+            self._next_char = self.input.read_char()
 
         elif self._next_char.isdigit():
             num = self._read_number()
@@ -91,33 +91,29 @@ class JackTokenizer:
         Reads until the first non-whitespace character is encountered
         """
         while self._next_char.isspace():
-            if self._next_char == "\n":
-                self._line_number += 1
-            self._next_char = self.input.read(1)
+            self._next_char = self.input.read_char()
 
     def _exhaust_line_comment(self):
-        self._next_char = self.input.read(1)
+        self._next_char = self.input.read_char()
         while self._next_char != "" and self._next_char != "\n":
-            self._next_char = self.input.read(1)
+            self._next_char = self.input.read_char()
 
     def _exhaust_block_comment(self):
         while self._next_char != "":
-            self._next_char = self.input.read(1)
-            if self._next_char == "\n":
-                self._line_number += 1
+            self._next_char = self.input.read_char()
             if self._next_char == "*":
-                self._next_char = self.input.read(1)
+                self._next_char = self.input.read_char()
                 if self._next_char == "/":
                     break
 
-        self._next_char = self.input.read(1)
+        self._next_char = self.input.read_char()
 
     def _read_number(self) -> int:
         num = self._next_char
-        self._next_char = self.input.read(1)
+        self._next_char = self.input.read_char()
         while self._next_char.isdigit():
             num += self._next_char
-            self._next_char = self.input.read(1)
+            self._next_char = self.input.read_char()
             if len(num) > languagerules.MAX_NUMBER_DIGITS:
                 raise ParserError("Got a number that contains more the 5 digits.")
 
@@ -125,7 +121,7 @@ class JackTokenizer:
 
     def _read_string(self) -> str:
         string = ""
-        self._next_char = self.input.read(1)
+        self._next_char = self.input.read_char()
         while self._next_char != languagerules.STRING_DELIMITER:
             if self._next_char == "":
                 raise ParserError("Reached end-of-file with an open string.")
@@ -133,16 +129,16 @@ class JackTokenizer:
                 raise ParserError("Reached the end of a line with an open string.")
 
             string += self._next_char
-            self._next_char = self.input.read(1)
-        self._next_char = self.input.read(1)
+            self._next_char = self.input.read_char()
+        self._next_char = self.input.read_char()
 
         return string
 
     def _read_word(self) -> str:
         word = self._next_char
-        self._next_char = self.input.read(1)
+        self._next_char = self.input.read_char()
         while self._next_char.isalnum() or self._next_char == '_':
             word += self._next_char
-            self._next_char = self.input.read(1)
+            self._next_char = self.input.read_char()
 
         return word
