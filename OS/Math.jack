@@ -79,7 +79,7 @@ class Math {
     function int divide(int x, int y) {
         var int y2;
         var int q;
-        var int neg;
+        var boolean neg;
         var int ans;
 
         if (y = 0) {
@@ -87,11 +87,11 @@ class Math {
         }
 
         if (x < 0) {
-            let neg = 16384;  // with this value, neg+neg == 0
+            let neg = true;
             let x = -x;
         }
         if (y < 0) {
-            let neg = neg + 16384;
+            let neg = ~neg;
             let y = -y;
         }
 
@@ -113,10 +113,10 @@ class Math {
             let ans = q + q + 1;
         }
 
-        if (neg=0) {
-            return ans;
+        if (neg) {
+            return -ans;
         }
-        return -ans;
+        return ans;
     }
 
     /** Returns the smaller value. */
